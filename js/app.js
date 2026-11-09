@@ -74,7 +74,8 @@ function setup3D(id, aspect = viewAspect) {
 }
 function resize3D() {
   const st = $('#stage'); if (!st.clientWidth || !document.body.classList.contains('editing')) return;
-  const dpr = Math.min(LITE ? 1 : 1.5, window.devicePixelRatio || 1);
+  // cliente vendo o link: nitidez máxima (até 2x); no editor do celular, um meio-termo para ficar leve
+  const dpr = Math.min(state.client ? 2 : LITE ? 1.25 : 1.5, window.devicePixelRatio || 1);
   renderer.setSize(Math.round(st.clientWidth * dpr), Math.round(st.clientHeight * dpr), false);
   viewAspect = st.clientWidth / st.clientHeight; needs3D = true; updateFrame();
 }

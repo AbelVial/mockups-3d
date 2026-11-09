@@ -8,20 +8,20 @@ const b64u = {
   enc: str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
   dec: s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/')))),
 };
-function compressImage(img, max) {
+function compressImage(img, max, q = .82) {
   const [w0, h0] = [img.naturalWidth || img.width, img.naturalHeight || img.height], k = Math.min(1, max / Math.max(w0, h0));
   const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w0 * k)); c.height = Math.max(1, Math.round(h0 * k));
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-  let url = c.toDataURL('image/webp', .82);
+  let url = c.toDataURL('image/webp', q);
   if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/png');   // navegador sem WebP: PNG (mantém transparência)
   return url;
 }
-function sharePayload(withArt, artMax = 640, cardMax = 560) {
+function sharePayload(withArt, artMax = 640, cardMax = 560, q = .82) {
   const id = state.product;
   const d = { c: state.colors[id] || {}, g: state.toggles[id] || {}, t: tf(id), k: state.tf[CARD_KEY], v: state.cam[id], s: state.so, f: state.format, w: state.watermark };
   const out = { ver: id, d: b64u.enc(JSON.stringify(d)) };
-  if (withArt && state.art) out.a = compressImage(state.art, artMax);
-  if (withArt && id === 'bottonCartao' && state.cardArt) out.ca = compressImage(state.cardArt, cardMax);
+  if (withArt && state.art) out.a = compressImage(state.art, artMax, q);
+  if (withArt && id === 'bottonCartao' && state.cardArt) out.ca = compressImage(state.cardArt, cardMax, q);
   return out;
 }
 const baseUrl = () => location.href.split('#')[0];
@@ -38,7 +38,7 @@ const TOKEN_KEY = 'meu-mockup-gist-token';
 const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
 const shortCache = {};
 async function shortLink(withArt) {
-  const p = sharePayload(withArt, 1024, 900), body = JSON.stringify(p);
+  const p = sharePayload(withArt, 2048, 1600, .95), body = JSON.stringify(p);
   const key = withArt + '|' + body.length + '|' + body.slice(0, 200) + body.slice(-200);
   if (shortCache[key]) return shortCache[key];
   const r = await fetch('https://api.github.com/gists', {

@@ -68,7 +68,7 @@ function parseGLB(buf) {
 
 // textura da arte (proporção da própria arte)
 function artTexture() {
-  const a = currentArt(), [aw, ah] = artSize(a), k = 1024 / Math.max(aw, ah);
+  const a = currentArt(), [aw, ah] = artSize(a), k = 2048 / Math.max(aw, ah);
   const c = document.createElement('canvas'); c.width = Math.max(2, Math.round(aw * k)); c.height = Math.max(2, Math.round(ah * k));
   c.getContext('2d').drawImage(a, 0, 0, c.width, c.height);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = maxAniso;
