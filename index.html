@@ -231,6 +231,13 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
 body.client .client-only{display:inline-flex!important}
 body.client #share,body.client #sheet,body.client #back,body.client .crumb,body.client .prodhead .btn,body.client #resetAll,body.client #sceneOptsBtn,
 body.client #gearBtn,body.client .m3d,body.client #customBox,body.client [data-tab="cena"],body.client .logo small,body.client #video{display:none!important}
+/* modo cliente = só visualização: sem painel, sem edição, sem download */
+body.client aside,body.client #artEditor,body.client #aeBtn,body.client #dockBtn,body.client #tabs,body.client #format,body.client #dl,
+body.client #drawer,body.client .floatbar .sep:last-of-type{display:none!important}
+body.client #editor{grid-template-columns:1fr!important;height:calc(100dvh - 64px)}
+body.client .stage{height:100%!important}
+body.client .logo{pointer-events:none}
+.ctip{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:3;padding:7px 14px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:12px;font-weight:500;pointer-events:none;white-space:nowrap}
 .cbadge{align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;background:var(--brand-50);color:var(--brand-600);font-size:13px;font-weight:500}
 .warn{padding:12px 14px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;font-size:13px;line-height:1.45}
 .warn b{display:block;margin-bottom:4px}
@@ -459,6 +466,7 @@ body.client #gearBtn,body.client .m3d,body.client #customBox,body.client [data-t
     <div class="body" id="drawerBody"></div>
   </div>
   <input type="file" id="bgImgFile" accept="image/*"><input type="file" id="env360File" accept="image/*"><input type="file" id="extraFile" accept="image/*"><input type="file" id="glbFile" accept=".glb,model/gltf-binary"><input type="file" id="tableImgFile" accept="image/*">
+  <div class="ctip client-only">Arraste para girar · use − e + para aproximar</div>
   <div class="floatbar" id="bar">
     <span class="grp dock-only" id="tabs">
       <button class="btn ghost sm" data-tab="arte"><svg class="i"><use href="#i-image"/></svg>Arte</button>

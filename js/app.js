@@ -374,6 +374,7 @@ new ResizeObserver(syncWm).observe($('#stage'));
 
 /* ---------- arte ---------- */
 async function setArt(file) {
+  if (state.client) return;
   if (!file || !file.type.startsWith('image/')) return;
   try {
     state.art = await loadImage(file); artStamp++;
@@ -547,6 +548,7 @@ view3d.addEventListener('wheel', e => {
   c.dist = Math.max(2.5, Math.min(18, c.dist * (e.deltaY < 0 ? .93 : 1.07))); needs3D = true;
 }, { passive: false });
 view3d.addEventListener('dblclick', e => {
+  if (state.client) return;
   const r = view3d.getBoundingClientRect(), ray = new THREE.Raycaster();
   ray.setFromCamera({ x: (e.clientX - r.left) / r.width * 2 - 1, y: -(e.clientY - r.top) / r.height * 2 + 1 }, camera);
   const m = model(state.product);

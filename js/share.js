@@ -18,7 +18,7 @@ function compressImage(img, max) {
 }
 function shareLink(withArt) {
   const id = state.product;
-  const data = { c: state.colors[id] || {}, g: state.toggles[id] || {}, t: tf(id), k: state.tf[CARD_KEY], s: state.so, f: state.format, w: state.watermark };
+  const data = { c: state.colors[id] || {}, g: state.toggles[id] || {}, t: tf(id), k: state.tf[CARD_KEY], v: state.cam[id], s: state.so, f: state.format, w: state.watermark };
   let h = '#ver=' + encodeURIComponent(id) + '&d=' + b64u.enc(JSON.stringify(data));
   if (withArt && state.art) h += '&a=' + encodeURIComponent(compressImage(state.art, 640));
   if (withArt && id === 'bottonCartao' && state.cardArt) h += '&ca=' + encodeURIComponent(compressImage(state.cardArt, 560));
@@ -74,7 +74,7 @@ async function openClientLink() {
   window.savePrefs = () => {}; window.saveScene = () => {};
   try {
     const d = JSON.parse(b64u.dec(p.get('d') || ''));
-    state.colors[id] = d.c || {}; state.toggles[id] = d.g || {}; if (d.t) state.tf[id] = d.t; if (d.k) state.tf[CARD_KEY] = d.k;
+    state.colors[id] = d.c || {}; state.toggles[id] = d.g || {}; if (d.t) state.tf[id] = d.t; if (d.k) state.tf[CARD_KEY] = d.k; if (d.v) state.cam[id] = d.v;
     if (d.s) { state.so = { ...state.so, ...d.s, table: { ...state.so.table, ...(d.s.table || {}) }, shadow: { ...state.so.shadow, ...(d.s.shadow || {}) } }; markScene('all'); }
     if (d.f && FORMATS[d.f]) { state.format = d.f; $('#format').value = d.f; }
     state.watermark = d.w || ''; $('#wm').value = state.watermark;
