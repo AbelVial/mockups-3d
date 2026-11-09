@@ -74,11 +74,20 @@ async function ghApi(path, opt = {}) {
   return r.json();
 }
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function previewImage() {            // foto 1200x630 do mockup, como o WhatsApp mostra
-  const c3 = snap3D(state.product, 1200, 630), o = document.createElement('canvas'); o.width = 1200; o.height = 630;
-  const x = o.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, 1200, 630); x.drawImage(c3, 0, 0);
-  addWatermark(x, 1200, 630);
-  return o.toDataURL('image/jpeg', .86);
+// foto de prévia: quadrada (o WhatsApp mostra maior) e enquadrada bem de perto no produto
+function previewImage(S = 800) {
+  const id = state.product, m = model(id), c = camOf(id), keep = { ...c };
+  // distância para o produto ocupar ~85% da foto
+  m.group.visible = true; m.group.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(m.group), size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
+  // esfera que envolve o produto inteiro (a câmera da foto quadrada usa 35°)
+  const rad = size.length() / 2, fov = 35 * Math.PI / 180;
+  Object.assign(c, { dist: Math.max(1.5, rad / Math.sin(fov / 2) * .95), tx: ctr.x, ty: ctr.y, tz: ctr.z });
+  let c3; try { c3 = snap3D(id, S, S); } finally { Object.assign(c, keep); needs3D = true; }
+  const o = document.createElement('canvas'); o.width = o.height = S;
+  const x = o.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, S, S); x.drawImage(c3, 0, 0);
+  addWatermark(x, S, S);
+  return o.toDataURL('image/jpeg', .88);
 }
 function shareTexts() {
   const prod = PRODUCTS[state.product]?.name || 'produto', nome = ($('#shName')?.value || '').trim();
@@ -94,7 +103,7 @@ async function publishPage(withArt) {
 <title>${esc(T.title)}</title><meta name="description" content="${esc(T.desc)}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Meu Mockup"><meta property="og:title" content="${esc(T.title)}">
 <meta property="og:description" content="${esc(T.desc)}"><meta property="og:url" content="${pageUrl}">
-<meta property="og:image" content="${R.base}s/${id}.jpg"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image" content="${R.base}s/${id}.jpg"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="800"><meta property="og:image:height" content="800">
 <meta name="twitter:card" content="summary_large_image"><meta http-equiv="refresh" content="0;url=${back}">
 <script>location.replace(${JSON.stringify(back)})</script></head>
 <body style="font-family:system-ui,sans-serif;background:#f5f7fb;display:grid;place-items:center;height:100vh;margin:0"><a href="${back}">Abrir o mockup 3D</a></body></html>`;
@@ -185,7 +194,11 @@ function renderShare() {
     } catch (e) {
       if (e.message === 'token') { try { localStorage.removeItem(TOKEN_KEY); } catch (er) {} tokenForm('O código salvo não funciona mais (expirou ou foi apagado). Gere outro.'); }
       if (e.message === 'perm') {
-        try { const l = await shortLink($('#shArt').checked); show(l, 'Link curto gerado, mas <b>sem foto de prévia</b>: o código atual não tem permissão para publicar páginas. Gere um código novo abaixo (com <code>public_repo</code>).'); tokenForm(); return; } catch (er) {}
+        go.disabled = false; go.innerHTML = '<svg class="i"><use href="#i-arrow"/></svg>Gerar link para o cliente';
+        tokenForm('<b>Falta permissão para a foto de prévia.</b> O código salvo só cria links sem foto. Gere um código novo pelo link acima (já vem com <code>public_repo</code> marcado), cole e salve.');
+        const alt = ui('button', 'btn sm block', 'Enviar mesmo assim, sem foto de prévia');
+        alt.onclick = async () => { try { show(await shortLink($('#shArt').checked), 'Link curto <b>sem foto de prévia</b>.'); } catch (er) { show(long, 'Link longo, sem foto de prévia.'); } alt.remove(); };
+        setup.prepend(alt); setup.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
       }
       show(long, `Não consegui publicar agora — usando o link longo (${Math.round(long.length / 1024)} KB).`);
     }
