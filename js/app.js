@@ -249,7 +249,15 @@ async function makeThumbs() {
 
 /* ================= navegação ================= */
 function route() {
-  if (location.hash.startsWith('#ver=') || location.hash.startsWith('#c=')) { if (!state.client) setTimeout(() => openClientLink().then(ok => { if (!ok) { location.hash = ''; } })); return; }
+  if (location.hash.startsWith('#ver=') || location.hash.startsWith('#c=')) {
+    if (state.client || state.clientStarting) return;
+    state.clientStarting = true;
+    // espera todos os scripts da página (share.js etc.) terminarem de carregar
+    const go = () => openClientLink().then(ok => { if (!ok) { document.documentElement.classList.remove('cl-boot'); location.hash = ''; } })
+      .catch(e => { console.error(e); document.documentElement.classList.remove('cl-boot'); $('#clientLoading').innerHTML = '<b>Não foi possível abrir este mockup.</b><span>Tente recarregar a página.</span>'; $('#clientLoading').classList.remove('hidden'); });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true }); else setTimeout(go);
+    return;
+  }
   if (state.client) return;
   const m = location.hash.match(/^#p=(.+)$/), id = m && decodeURIComponent(m[1]);
   if (id && (PRODUCTS[id] || getTpl(id))) {
