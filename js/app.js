@@ -67,8 +67,9 @@ function setup3D(id, aspect = viewAspect) {
   const m = model(id);
   Object.entries(models).forEach(([k, mm]) => mm.group.visible = k === id);
   const c = camOf(id);
-  camera.position.setFromSphericalCoords(c.dist, c.phi, c.theta);
-  camera.lookAt(0, 0, 0);
+  const target = new THREE.Vector3(c.tx || 0, c.ty || 0, c.tz || 0);   // ponto central (muda ao arrastar para os lados)
+  camera.position.setFromSphericalCoords(c.dist, c.phi, c.theta).add(target);
+  camera.lookAt(target);
   setCam(aspect);
   applyScene(m, aspect);
 }
@@ -548,22 +549,37 @@ $('#wm').oninput = e => { state.watermark = e.target.value; savePrefs(); syncWm(
 $('#guides').onchange = e => { state.guides = e.target.checked; draw(); };
 
 /* ---------- mouse no 3D ---------- */
-const touches = new Map(); let pinch0 = 0;
+const touches = new Map(); let pinch0 = 0, mid0 = null;
 const pinchDist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+const pinchMid = () => { const [a, b] = [...touches.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+// mover a cena para os lados: desloca o ponto central na direção da tela
+function pan3D(dx, dy) {
+  const c = camOf(state.product), h = view3d.clientHeight || 1;
+  const k = 2 * c.dist * Math.tan(camera.fov * Math.PI / 360) / h;
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+  const t = new THREE.Vector3(c.tx || 0, c.ty || 0, c.tz || 0).addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+  const lim = 4; c.tx = Math.max(-lim, Math.min(lim, t.x)); c.ty = Math.max(-lim, Math.min(lim, t.y)); c.tz = Math.max(-lim, Math.min(lim, t.z));
+  needs3D = true;
+}
+view3d.addEventListener('contextmenu', e => e.preventDefault());
 view3d.addEventListener('pointerdown', e => {
   try { view3d.setPointerCapture(e.pointerId); } catch (er) {}
   touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (touches.size === 2) { drag3d = null; pinch0 = pinchDist(); } else drag3d = { x: e.clientX, y: e.clientY };
+  if (touches.size === 2) { drag3d = null; pinch0 = pinchDist(); mid0 = pinchMid(); }
+  else drag3d = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.button === 1 || e.shiftKey };
 });
-const endTouch = e => { touches.delete(e.pointerId); if (touches.size < 2) pinch0 = 0; };
+const endTouch = e => { touches.delete(e.pointerId); if (touches.size < 2) { pinch0 = 0; mid0 = null; } };
 view3d.addEventListener('pointercancel', e => { endTouch(e); drag3d = null; });
 view3d.addEventListener('pointermove', e => {
   if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (touches.size === 2 && pinch0) {      // zoom com dois dedos
-    const d = pinchDist(), c = camOf(state.product);
-    c.dist = Math.max(2.5, Math.min(18, c.dist * pinch0 / d)); pinch0 = d; needs3D = true; return;
+  if (touches.size === 2 && pinch0) {      // dois dedos: pinça = zoom, arrastar = mover para os lados
+    const d = pinchDist(), m = pinchMid(), c = camOf(state.product);
+    c.dist = Math.max(2.5, Math.min(18, c.dist * pinch0 / d)); pinch0 = d;
+    if (mid0) pan3D(m.x - mid0.x, m.y - mid0.y); mid0 = m;
+    needs3D = true; return;
   }
   if (!drag3d) return;
+  if (drag3d.pan || e.shiftKey) { pan3D(e.clientX - drag3d.x, e.clientY - drag3d.y); drag3d.x = e.clientX; drag3d.y = e.clientY; return; }
   const c = camOf(state.product);
   c.theta -= (e.clientX - drag3d.x) * .008;
   c.phi = Math.max(.25, Math.min(1.75, c.phi - (e.clientY - drag3d.y) * .006));

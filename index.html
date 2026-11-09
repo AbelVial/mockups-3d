@@ -238,6 +238,7 @@ body.client #drawer,body.client .floatbar .sep:last-of-type{display:none!importa
 body.client #editor{grid-template-columns:1fr!important;height:calc(100dvh - 64px)}
 body.client .stage{height:100%!important}
 body.client .logo{pointer-events:none}
+.tip-touch{display:none}@media (pointer:coarse){.tip-touch{display:inline}.tip-mouse{display:none}}
 .ctip{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:3;padding:7px 14px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:12px;font-weight:500;pointer-events:none;white-space:normal;text-align:center;max-width:calc(100% - 24px);width:max-content}
 .cbadge b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:560px){.cb-l{display:none}.cbadge{max-width:calc(100vw - 150px)}}
@@ -590,7 +591,7 @@ footer .credits{font-size:11px;opacity:.8;max-width:900px}
     <div class="body" id="drawerBody"></div>
   </div>
   <input type="file" id="bgImgFile" accept="image/*"><input type="file" id="env360File" accept="image/*"><input type="file" id="extraFile" accept="image/*"><input type="file" id="glbFile" accept=".glb,model/gltf-binary"><input type="file" id="tableImgFile" accept="image/*">
-  <div class="ctip client-only">Arraste para girar · use dois dedos ou − e + para aproximar</div>
+  <div class="ctip client-only"><span class="tip-touch">Arraste para girar · dois dedos para mover e aproximar</span><span class="tip-mouse">Arraste para girar · botão direito para mover · rodinha para zoom</span></div>
   <div class="floatbar" id="bar">
     <span class="grp dock-only" id="tabs">
       <button class="btn ghost sm" data-tab="arte"><svg class="i"><use href="#i-image"/></svg>Arte</button>
@@ -599,7 +600,7 @@ footer .credits{font-size:11px;opacity:.8;max-width:900px}
       <button class="btn ghost sm" data-tab="cena"><svg class="i"><use href="#i-brand"/></svg>Cena</button>
       <span class="sep"></span>
     </span>
-    <span class="grp" id="box3d" title="Arraste para girar · rodinha = zoom · duplo clique posiciona a arte">
+    <span class="grp" id="box3d" title="Arraste para girar · botão direito ou Shift + arrastar = mover · rodinha = zoom · duplo clique posiciona a arte">
       <button class="btn ghost sm" id="auto"><svg class="i"><use href="#i-rotate"/></svg><span class="lbl2">Girar sozinho</span></button>
       <button class="btn ghost sm" id="front"><svg class="i"><use href="#i-target"/></svg><span class="lbl2">Vista padrão</span></button>
       <button class="btn ghost sm side-only" id="gearBtn" title="Opções de cena"><svg class="i"><use href="#i-sliders"/></svg>Cena</button>
