@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(/^#(ver|c)=/.test(location.hash))document.documentElement.classList.add("cl-boot");</script>
 <script>(()=>{let t;try{t=localStorage.getItem("mm-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t;})()</script>
 <title>Meu Mockup — Estúdio de mockups 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -310,6 +311,81 @@ body.client .logo{pointer-events:none}
   footer{padding:0 12px 24px}
   body.dock.dock-open aside{top:64px;max-height:calc(100vh - 150px)}
 }
+/* ================= página inicial ================= */
+.hnav{display:flex;gap:4px;margin-left:12px}
+.hnav a{padding:8px 12px;border-radius:9px;text-decoration:none;color:var(--text);font-weight:500;font-size:14px}
+.hnav a:hover{background:var(--soft);color:var(--ink)}
+#catalogView{max-width:1240px;overflow-x:clip}
+body{overflow-x:hidden}
+.h-hero{position:relative;display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center;min-height:560px;padding:56px 8px 40px;isolation:isolate}
+.h-blob{position:absolute;z-index:-1;border-radius:50%;filter:blur(70px);opacity:.55;animation:drift 18s ease-in-out infinite alternate}
+.h-blob.b1{width:520px;height:520px;background:#93c5fd;top:-140px;right:-60px}
+.h-blob.b2{width:420px;height:420px;background:#c4b5fd;bottom:-120px;right:280px;animation-delay:-6s}
+.h-blob.b3{width:360px;height:360px;background:#fbcfe8;top:40px;left:-160px;opacity:.4;animation-delay:-12s}
+:root[data-theme=dark] .h-blob{opacity:.22}
+@keyframes drift{to{transform:translate(40px,30px) scale(1.08)}}
+.h-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--text);box-shadow:var(--shadow)}
+.h-live{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.h-copy h2{font-size:clamp(32px,4.3vw,54px);line-height:1.04;letter-spacing:-.035em;font-weight:800;color:var(--ink);margin:22px 0 18px}
+.h-grad{background:linear-gradient(100deg,#2563eb 10%,#7c3aed 55%,#db2777);-webkit-background-clip:text;background-clip:text;color:transparent}
+.h-copy p{font-size:17px;line-height:1.6;color:var(--text);max-width:520px;margin:0}
+.h-cta{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap}
+.btn.lg{height:48px;padding:0 22px;font-size:15px;border-radius:12px}
+.btn.pri.lg{box-shadow:0 10px 24px -8px rgba(37,99,235,.6)}
+.h-trust{display:flex;gap:28px;margin-top:36px;flex-wrap:wrap}
+.h-trust div{display:flex;flex-direction:column}
+.h-trust b{font-size:22px;color:var(--ink);letter-spacing:-.02em}
+.h-trust span{font-size:13px;color:var(--muted)}
+.h-show{position:relative;height:480px}
+.h-ring{position:absolute;inset:40px 30px;border-radius:50%;border:1.5px dashed var(--line-2);animation:spinr 60s linear infinite}
+@keyframes spinr{to{transform:rotate(360deg)}}
+.h-card{position:absolute;display:block;border-radius:22px;overflow:hidden;background:var(--panel);border:1px solid var(--line);box-shadow:0 30px 60px -20px rgba(15,23,42,.35);text-decoration:none;transition:transform .3s;animation:float 6s ease-in-out infinite}
+.h-card img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:linear-gradient(180deg,var(--soft),var(--line))}
+.h-card span{position:absolute;left:12px;bottom:12px;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.92);color:#0f172a;font-size:12px;font-weight:600}
+.h-card:hover{transform:translateY(-6px) scale(1.02)!important}
+.h-card.c1{width:56%;left:0;top:18%;z-index:2}
+.h-card.c2{width:44%;right:2%;top:0;animation-delay:-2s}
+.h-card.c3{width:42%;right:6%;bottom:0;z-index:3;animation-delay:-4s}
+@keyframes float{50%{transform:translateY(-12px)}}
+.h-chip{position:absolute;z-index:4;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-lg);font-size:13px;font-weight:600;color:var(--ink);animation:float 7s ease-in-out infinite}
+.h-chip svg{width:16px;height:16px;color:var(--brand)}
+.h-chip.k1{left:-4%;bottom:12%;animation-delay:-3s}
+.h-chip.k2{right:-2%;top:44%;animation-delay:-5s}
+.h-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px}
+.h-feats>div{padding:22px;border-radius:18px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+.h-feats>div:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.fi{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--brand),#7c3aed);color:#fff;margin-bottom:14px}
+.h-feats b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+.h-feats p{margin:0;font-size:14px;line-height:1.55;color:var(--muted)}
+.h-head{text-align:center;margin:72px auto 28px;max-width:640px}
+.h-tag{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--brand-50);color:var(--brand-600);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.h-head h3{font-size:clamp(24px,3vw,34px);letter-spacing:-.025em;color:var(--ink);margin:12px 0 0}
+.h-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+.h-steps>div{position:relative;padding:26px 24px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.h-steps i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;font-style:normal;font-weight:800;color:var(--brand-600);background:var(--brand-50);margin-bottom:14px}
+.h-steps b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+.h-steps p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+.toolbar{justify-content:center}
+.chips{flex:0 1 auto;justify-content:center}
+footer{flex-direction:column;align-items:center;text-align:center;gap:6px;padding-top:24px;border-top:1px solid var(--line);margin-top:40px}
+footer .credits{font-size:11px;opacity:.8;max-width:900px}
+@media (max-width:900px){
+  .hnav{display:none}
+  .h-hero{grid-template-columns:1fr;min-height:0;padding:28px 0 8px;gap:12px}
+  .h-copy p{font-size:15px}
+  .h-show{height:320px;max-width:420px;width:100%;margin:0 auto}
+  .h-chip{font-size:12px;padding:7px 10px}
+  .h-feats{grid-template-columns:1fr 1fr}
+  .h-steps{grid-template-columns:1fr}
+  .h-head{margin:48px auto 20px}
+  .h-trust{gap:20px;margin-top:26px}
+}
+@media (max-width:520px){ .h-feats{grid-template-columns:1fr} .h-cta .btn{flex:1} }
+#catalogo,#como,#recursos{scroll-margin-top:84px}
+/* link compartilhado: nada do site aparece antes do 3D */
+.cl-boot #catalogView,.cl-boot footer,.cl-boot header .hnav,.cl-boot header .crumb{display:none!important}
+.cl-boot #clientLoading{display:flex!important}
 </style>
 </head>
 <body>
@@ -345,7 +421,7 @@ body.client .logo{pointer-events:none}
     <span>Meu Mockup<small>Estúdio de mockups 3D</small></span></a>
   <nav class="crumb ed-only"><a href="#">Produtos</a><span>/</span><b id="crumbName"></b></nav>
   <div class="sp"></div>
-  <div class="hstat cat-only"><span class="dot"></span>Funciona sem internet · 100% gratuito</div>
+  <nav class="hnav cat-only"><a href="#" data-go="catalogo">Produtos</a><a href="#" data-go="como">Como funciona</a><a href="#" data-go="recursos">Recursos</a></nav>
   <button class="btn ghost theme-btn" id="themeBtn" title="Tema claro / escuro" aria-label="Alternar tema claro/escuro"><svg class="i moon"><use href="#i-moon"/></svg><svg class="i sun"><use href="#i-sun"/></svg></button>
   <button class="btn ghost ed-only" id="back"><svg class="i"><use href="#i-back"/></svg><span class="lbl">Produtos</span></button>
   <span class="client-only cbadge"><svg class="i"><use href="#i-cube"/></svg>Visualização 3D · <b id="clientName"></b></span>
@@ -358,30 +434,57 @@ body.client .logo{pointer-events:none}
 
 <!-- ================= CATÁLOGO ================= -->
 <div id="catalogView" class="cat-only">
-  <section class="hero">
-    <div>
-      <span class="pill"><svg class="i" style="width:14px;height:14px"><use href="#i-cube"/></svg> Mockups 3D interativos</span>
-      <h2>Apresente seus produtos personalizados como uma grande marca.</h2>
-      <p>Envie a arte uma única vez e veja o resultado em canecas, camisetas, bottons e muito mais — com visual profissional, pronto para enviar ao cliente.</p>
-      <div class="steps"><div><span>1</span>Envie a arte</div><div><span>2</span>Escolha o produto</div><div><span>3</span>Baixe imagem ou vídeo</div></div>
+  <section class="h-hero">
+    <div class="h-blob b1"></div><div class="h-blob b2"></div><div class="h-blob b3"></div>
+    <div class="h-copy">
+      <span class="h-eyebrow"><span class="h-live"></span>Estúdio de mockups 3D para personalizados</span>
+      <h2>Seus produtos em&nbsp;3D,<br><span class="h-grad">prontos para vender.</span></h2>
+      <p>Canecas, camisetas, bottons, almofadas e muito mais com a sua arte aplicada em segundos. Gire, escolha o cenário e envie para o cliente aprovar.</p>
+      <div class="h-cta">
+        <a href="#" class="btn pri lg" data-go="catalogo">Começar agora <svg class="i"><use href="#i-arrow"/></svg></a>
+        <a href="#" class="btn lg" data-go="como">Como funciona</a>
+      </div>
+      <div class="h-trust">
+        <div><b id="hCount">17</b><span>produtos em 3D</span></div>
+        <div><b>PNG</b><span>e vídeo em alta</span></div>
+        <div><b>Link</b><span>para o cliente</span></div>
+      </div>
     </div>
-    <label class="upload">
-      <img class="artThumb hidden" alt="">
-      <span class="ico artIco"><svg class="i"><use href="#i-upload"/></svg></span>
-      <b class="artTitle">Enviar sua arte</b>
-      <small class="artTxt">Clique, arraste o arquivo ou cole com Ctrl+V<br>PNG com fundo transparente fica melhor</small>
-      <input type="file" class="artFile" accept="image/*">
-    </label>
+    <div class="h-show">
+      <div class="h-ring"></div>
+      <a class="h-card c1" href="#p=caneca"><img data-thumb="caneca" alt=""><span>Caneca</span></a>
+      <a class="h-card c2" href="#p=camiseta"><img data-thumb="camiseta" alt=""><span>Camiseta</span></a>
+      <a class="h-card c3" href="#p=bottonCartao"><img data-thumb="bottonCartao" alt=""><span>Botton com cartão</span></a>
+      <div class="h-chip k1"><svg class="i"><use href="#i-rotate"/></svg>Gire 360°</div>
+      <div class="h-chip k2"><svg class="i"><use href="#i-film"/></svg>Vídeo pronto</div>
+    </div>
   </section>
 
+  <section class="h-feats" id="recursos">
+    <div><span class="fi"><svg class="i"><use href="#i-cube"/></svg></span><b>3D de verdade</b><p>A arte acompanha a curva da caneca, o tecido da camiseta e a cúpula do botton.</p></div>
+    <div><span class="fi"><svg class="i"><use href="#i-image"/></svg></span><b>Cenário de estúdio</b><p>Fundo 360°, mesa de madeira, mármore ou pódio, com luz e sombra realistas.</p></div>
+    <div><span class="fi"><svg class="i"><use href="#i-film"/></svg></span><b>Imagem e vídeo</b><p>Baixe PNG em alta, prancha com vários produtos ou vídeo girando para Stories.</p></div>
+    <div><span class="fi"><svg class="i"><use href="#i-arrow"/></svg></span><b>Aprovação do cliente</b><p>Envie um link: o cliente gira o produto em 3D no celular, sem instalar nada.</p></div>
+  </section>
+
+  <section class="h-how" id="como">
+    <div class="h-head"><span class="h-tag">Como funciona</span><h3>Do arquivo ao mockup em três passos</h3></div>
+    <div class="h-steps">
+      <div><i>1</i><b>Escolha o produto</b><p>Abra qualquer item do catálogo abaixo.</p></div>
+      <div><i>2</i><b>Envie e posicione a arte</b><p>Arraste, aumente e gire com o mouse — o 3D atualiza na hora.</p></div>
+      <div><i>3</i><b>Baixe ou compartilhe</b><p>PNG, vídeo ou link para o cliente ver e aprovar.</p></div>
+    </div>
+  </section>
+
+  <div class="h-head" id="catalogo" style="margin-top:56px"><span class="h-tag">Catálogo</span><h3>Escolha um produto para começar</h3></div>
   <div class="toolbar">
     <div class="chips" id="chips"></div>
     <label class="search"><svg class="i"><use href="#i-search"/></svg><input type="text" id="q" placeholder="Buscar produto…"></label>
   </div>
   <div id="catalog"></div>
 </div>
-<footer class="cat-only"><span>Meu Mockup · estúdio de mockups</span><span>As imagens são geradas no seu computador — nada é enviado para a internet.</span>
-  <span style="flex-basis:100%">Créditos (CC BY 4.0, via Sketchfab): <a href="https://sketchfab.com/3d-models/5a21282b2e454d1696547148f617d3d0" target="_blank" rel="noopener">Tshirt</a> por Tabbuso ·
+<footer class="cat-only"><span><b>Meu Mockup</b> · estúdio de mockups 3D</span>
+  <span class="credits">Créditos (CC BY 4.0, via Sketchfab): <a href="https://sketchfab.com/3d-models/5a21282b2e454d1696547148f617d3d0" target="_blank" rel="noopener">Tshirt</a> por Tabbuso ·
   <a href="https://sketchfab.com/3d-models/1c1d34d73fd94e6b9e8f82b1eb7194a0" target="_blank" rel="noopener">Baseball Cap</a> por vanart ·
   <a href="https://sketchfab.com/3d-models/ac0eaae976a545caa52908e977f59ae0" target="_blank" rel="noopener">Flip Flops</a> por Remie07 ·
   <a href="https://sketchfab.com/3d-models/3efa24932b5b4db498542670a3b48977" target="_blank" rel="noopener">KO SLEEPMASK</a> por reisponsive ·

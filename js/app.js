@@ -228,15 +228,20 @@ async function makeThumbs() {
   if (!thumbsDirty) return;
   thumbsDirty = false;
   const job = ++thumbJob;
-  const ids = [...CATEGORIES.flatMap(([, ids]) => ids), ...state.templates.map(t => t.id)];
+  const hero = ['caneca', 'camiseta', 'bottonCartao'];
+  const ids = [...new Set([...hero, ...CATEGORIES.flatMap(([, ids]) => ids), ...state.templates.map(t => t.id)])];
   for (const id of ids) {
     await new Promise(r => setTimeout(r, 0));
     if (job !== thumbJob) return;
     try {
+      const TH = { caneca: .45, chopp: .45, xicara: .5 }, keep = state.cam[id];
+      if (TH[id] != null && is3D(id) && !keep) state.cam[id] = { ...model(id).cam, theta: TH[id] };   // miniatura com a arte de frente
       const c = is3D(id) ? snap3D(id, 420) : exportCanvas(id, 0, false);
+      if (TH[id] != null && !keep) delete state.cam[id];
       const k = Math.min(1, 420 / Math.max(c.width, c.height)), o = document.createElement('canvas');
       o.width = c.width * k; o.height = c.height * k; o.getContext('2d').drawImage(c, 0, 0, o.width, o.height);
       thumbs[id].src = o.toDataURL('image/png');
+      document.querySelectorAll(`[data-thumb="${id}"]`).forEach(i => i.src = thumbs[id].src);
       if (id === state.product) $('#prodThumb').src = thumbs[id].src;
     } catch (e) { console.error(id, e); }
   }
@@ -776,6 +781,8 @@ $('#extraFile').onchange = async e => {
   try { state[key] = await loadImage(f); if (key === 'cardArt') { cardStamp++; delete state.tf[CARD_KEY]; state.layer = 'card'; syncUI(); } thumbsDirty = true; draw(); renderOptions(); toast('Arte do cartão aplicada'); }
   catch (er) { toast('Não consegui abrir essa imagem'); }
 };
+document.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); document.getElementById(a.dataset.go)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+$('#hCount').textContent = CATEGORIES.reduce((n, [, ids]) => n + ids.length, 0);
 /* ---------- menu embaixo / na lateral ---------- */
 function openTab(tab) {
   const open = tab && !(document.body.classList.contains('dock-open') && state.dockTab === tab);

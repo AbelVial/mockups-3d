@@ -119,7 +119,7 @@ async function openClientLink() {
   if (p.get('c')) {
     $('#clientLoading').classList.remove('hidden');
     try { p = await fetchShared(p.get('c')); }
-    catch (e) { $('#clientLoading').innerHTML = '<b>Não foi possível abrir este mockup.</b><span>O link pode ter sido removido. Peça um novo à loja.</span>'; return true; }
+    catch (e) { document.documentElement.classList.remove('cl-boot'); document.body.classList.add('client'); $('#clientLoading').innerHTML = '<b>Não foi possível abrir este mockup.</b><span>O link pode ter sido removido. Peça um novo à loja.</span>'; return true; }
   }
   const id = p.get('ver');
   if (!id || !PRODUCTS[id]) return false;
@@ -146,6 +146,6 @@ async function openClientLink() {
   $('#clientName').textContent = PRODUCTS[id].name;
   state.product = id; document.body.classList.add('editing');
   syncUI(); draw(); resize3D();
-  $('#clientLoading').classList.add('hidden');
+  $('#clientLoading').classList.add('hidden'); document.documentElement.classList.remove('cl-boot');
   return true;
 }
