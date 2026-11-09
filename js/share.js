@@ -71,6 +71,7 @@ function renderShare() {
       Use <a href="https://abelvial.github.io/mockups-3d/" target="_blank" rel="noopener">abelvial.github.io/mockups-3d</a>.</div>`;
   }
   box.append(ui('label', 'check', `<input type="checkbox" id="shArt" ${withArt ? 'checked' : ''}> Enviar junto a minha arte atual`));
+  if (!state.art) box.append(ui('div', 'warn', '<b>Você ainda não enviou uma arte.</b>O cliente vai ver o modelo “SUA ARTE AQUI”. Envie a arte no painel “Arte” antes de compartilhar.'));
   $('#shArt').onchange = renderShare;
   const row = ui('div', 'linkrow', `<input type="text" readonly value="Gerando link…"><button class="btn pri sm" id="shCopy" disabled><svg class="i"><use href="#i-check"/></svg>Copiar link</button>`);
   const inp = row.querySelector('input'); box.append(row);

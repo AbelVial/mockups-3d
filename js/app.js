@@ -225,7 +225,8 @@ function renderCatalog() {
 }
 $('#q').oninput = e => { catQuery = e.target.value; renderCatalog(); };
 async function makeThumbs() {
-  if (!thumbsDirty) return;
+  // link do cliente: nunca gerar as miniaturas do catálogo (pesado e desnecessário)
+  if (!thumbsDirty || state.client || state.clientStarting || document.documentElement.classList.contains('cl-boot')) return;
   thumbsDirty = false;
   const job = ++thumbJob;
   const hero = ['caneca', 'camiseta', 'bottonCartao'];
