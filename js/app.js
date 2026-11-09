@@ -17,7 +17,9 @@ const is3D = id => !!PRODUCTS[id];
 const getTpl = id => state.templates.find(t => t.id === id);
 const nameOf = id => PRODUCTS[id]?.name || getTpl(id)?.name || '';
 
-function tf(id = state.product) {
+const editKey = () => state.product === 'bottonCartao' && state.layer === 'card' ? CARD_KEY : state.product;
+function tf(id = editKey()) {
+  if (id === CARD_KEY) return cardTf();
   if (!state.tf[id]) state.tf[id] = { scale: PRODUCTS[id]?.scale ?? 1, x: 0, y: 0, rot: 0 };
   return state.tf[id];
 }
@@ -242,6 +244,8 @@ async function makeThumbs() {
 
 /* ================= navegação ================= */
 function route() {
+  if (location.hash.startsWith('#ver=')) { if (!state.client) setTimeout(() => openClientLink().then(ok => { if (!ok) { location.hash = ''; } })); return; }
+  if (state.client) return;
   const m = location.hash.match(/^#p=(.+)$/), id = m && decodeURIComponent(m[1]);
   if (id && (PRODUCTS[id] || getTpl(id))) {
     state.product = id; state.defining = false;
@@ -305,6 +309,14 @@ function renderOptions() {
       if (!live) renderOptions();
     }, d.def.startsWith('='));
   });
+  (P.uploads || []).forEach(d => {
+    const h = document.createElement('h5'); h.textContent = d.label; box.append(h);
+    const b = document.createElement('button'); b.className = 'btn sm block';
+    b.innerHTML = `<svg class="i"><use href="#i-upload"/></svg>${state[d.key] ? 'Trocar arte do cartão' : 'Enviar arte do cartão'}`;
+    b.onclick = () => { const f = $('#extraFile'); f.dataset.key = d.key; f.click(); };
+    box.append(b);
+    if (d.hint) box.insertAdjacentHTML('beforeend', `<p class="hint"><svg class="i"><use href="#i-info"/></svg><span>${d.hint}</span></p>`);
+  });
   const tg = togglesOf(id);
   P.toggles.forEach(d => {
     const l = document.createElement('label'); l.className = 'check';
@@ -321,6 +333,8 @@ function syncWm() {
 function syncUI() {
   const id = state.product; if (!id) return;
   const t = tf(), tpl = getTpl(id), d3 = is3D(id);
+  $('#layerSeg').classList.toggle('hidden', id !== 'bottonCartao');
+  $('#layerSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === state.layer));
   $('#prodName').textContent = $('#crumbName').textContent = nameOf(id);
   let ts = thumbs[id]?.src;
   if (!ts) { try { ts = (is3D(id) ? snap3D(id, 160) : exportCanvas(id, 0, false)).toDataURL('image/png'); } catch (e) { ts = ''; } }
@@ -390,8 +404,8 @@ $('#rot').oninput = e => { tf().rot = +e.target.value; artChanged(); };
 $('#center').onclick = () => { const t = tf(); t.x = t.y = 0; t.rot = 0; syncUI(); artChanged(); };
 $('#fit').onclick = () => { const t = tf(); t.scale = 1; t.x = t.y = 0; syncUI(); artChanged(); };
 $('#cover').onclick = () => {
-  const area = currentArea(), [aw, ah] = artSize(), t = tf(), id = state.product, m = is3D(id) && model(id);
-  if (m && !m.custom && (m.clip || m.wrap)) {   // peças que dão a volta: a arte ocupa a altura toda (ou a volta toda, se for larga)
+  const card = editKey() === CARD_KEY, area = card ? cardArea() : currentArea(), [aw, ah] = artSize(card ? cardImage() : undefined), t = tf(), id = state.product, m = is3D(id) && model(id);
+  if (!card && m && !m.custom && (m.clip || m.wrap)) {   // peças que dão a volta: a arte ocupa a altura toda (ou a volta toda, se for larga)
     const T = m.tex.canvas, A = m.area;
     t.scale = Math.min(T.width / aw, T.height / ah) / Math.min(A.w / aw, A.h / ah);
     t.x = (T.width / 2 - (A.x + A.w / 2)) / A.w; t.y = (T.height / 2 - (A.y + A.h / 2)) / A.h;
@@ -535,7 +549,9 @@ view3d.addEventListener('wheel', e => {
 view3d.addEventListener('dblclick', e => {
   const r = view3d.getBoundingClientRect(), ray = new THREE.Raycaster();
   ray.setFromCamera({ x: (e.clientX - r.left) / r.width * 2 - 1, y: -(e.clientY - r.top) / r.height * 2 + 1 }, camera);
-  const m = model(state.product), hit = ray.intersectObject(m.printable, true)[0];
+  const m = model(state.product);
+  if (editKey() === CARD_KEY) { const h = ray.intersectObject(m.card, true)[0]; if (h && h.uv) { const t = tf(); t.x = h.uv.x - .5; t.y = .5 - h.uv.y; syncUI(); artChanged(); } return; }
+  const hit = ray.intersectObject(m.printable, true)[0];
   if (hit && m.custom) {
     const t = tf(); m.fromHit(hit.point, t);
     syncUI(); artChanged(); return;
@@ -739,6 +755,12 @@ $('#glbFile').onchange = async e => {
   await importModel(id, f); renderOptions(); draw();
 };
 
+$('#layerSeg').querySelectorAll('button').forEach(b => b.onclick = () => { state.layer = b.dataset.l; syncUI(); });
+$('#extraFile').onchange = async e => {
+  const f = e.target.files[0], key = e.target.dataset.key; e.target.value = ''; if (!f) return;
+  try { state[key] = await loadImage(f); if (key === 'cardArt') { cardStamp++; delete state.tf[CARD_KEY]; state.layer = 'card'; syncUI(); } thumbsDirty = true; draw(); renderOptions(); toast('Arte do cartão aplicada'); }
+  catch (er) { toast('Não consegui abrir essa imagem'); }
+};
 /* ---------- menu embaixo / na lateral ---------- */
 function openTab(tab) {
   const open = tab && !(document.body.classList.contains('dock-open') && state.dockTab === tab);

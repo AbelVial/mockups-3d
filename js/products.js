@@ -14,7 +14,7 @@ const CATEGORIES = [
   ['Vestuário', ['camiseta', 'body', 'bone', 'chinelo', 'mascara']],
   ['Canecas e bebidas', ['caneca', 'xicara', 'chopp', 'garrafa']],
   ['Decoração', ['azulejo', 'relogio', 'almofada']],
-  ['Brindes e acessórios', ['botton', 'chaveiro', 'almochaveiro', 'mousepad']],
+  ['Brindes e acessórios', ['botton', 'bottonCartao', 'chaveiro', 'almochaveiro', 'mousepad']],
 ];
 const PRODUCTS = {};
 function defProduct(id, d) { PRODUCTS[id] = { id, scale: 1, colors: [], toggles: [], ...d }; }
@@ -155,6 +155,78 @@ defProduct('botton', {
     g.add(front, back); g.scale.setScalar(1.1);
     return { group: g, printable: front.children[0], tex: T, area: { x: 124, y: 124, w: 1800, h: 1800 },
       ground: -1.16, cam: { theta: 0, phi: 1.5, dist: 8.6 }, apply(c, tg) { back.visible = tg.back; } };
+  },
+});
+
+/* ------------------------------------------------------------------ botton com cartão */
+state.cardArt = null; let cardStamp = 0;
+state.layer = 'btn';                  // no botton com cartão: 'btn' = arte do botton, 'card' = arte do cartão
+const CARD_KEY = 'bottonCartao#card';
+let cardPlaceholder = null;
+function cardImage() {
+  if (state.cardArt) return state.cardArt;
+  if (!cardPlaceholder) { cardPlaceholder = document.createElement('canvas'); cardPlaceholder.width = 1024; cardPlaceholder.height = Math.round(1024 * CARD.H / CARD.W); paintCardPlaceholder(cardPlaceholder.getContext('2d'), cardPlaceholder.width, cardPlaceholder.height); }
+  return cardPlaceholder;
+}
+const cardArea = () => ({ x: 0, y: 0, w: 1024, h: Math.round(1024 * CARD.H / CARD.W) });
+function cardTf() {          // começa preenchendo o cartão todo
+  if (!state.tf[CARD_KEY]) {
+    const a = cardImage(), A = cardArea(), [aw, ah] = artSize(a);
+    state.tf[CARD_KEY] = { scale: Math.max(A.w / aw, A.h / ah) / Math.min(A.w / aw, A.h / ah), x: 0, y: 0, rot: 0 };
+  }
+  return state.tf[CARD_KEY];
+}
+function drawImg(ctx, img, area, t) {
+  const [aw, ah] = artSize(img), s = Math.min(area.w / aw, area.h / ah) * t.scale;
+  ctx.save(); ctx.translate(area.x + area.w / 2 + t.x * area.w, area.y + area.h / 2 + t.y * area.h);
+  ctx.rotate(t.rot * Math.PI / 180); ctx.drawImage(img, -aw * s / 2, -ah * s / 2, aw * s, ah * s); ctx.restore();
+}
+function paintCardPlaceholder(x, W, H) {
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#eaf2fb'); g.addColorStop(1, '#cfe0f3'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#1d4ed8'; x.fillRect(0, H * .86, W, H * .14);
+  x.fillStyle = '#0f2a5c'; x.textAlign = 'center'; x.font = `800 ${W * .11}px system-ui,sans-serif`; x.fillText('SEU CARTÃO', W / 2, H * .15);
+  x.font = `500 ${W * .05}px system-ui,sans-serif`; x.fillStyle = '#334155'; x.fillText('Envie a arte do cartão no painel “Cores”', W / 2, H * .22);
+  x.setLineDash([W * .02, W * .015]); x.strokeStyle = 'rgba(15,42,92,.35)'; x.lineWidth = W * .006;
+  x.beginPath(); x.arc(W / 2, H * CARD.btnY, W * CARD.btnR, 0, TAU); x.stroke(); x.setLineDash([]);
+  x.fillStyle = '#fff'; x.font = `600 ${W * .045}px system-ui,sans-serif`; x.fillText('@minhaloja', W / 2, H * .94);
+}
+// medidas: cartão 7 x 10 cm, botton 4,4 cm (proporções reais)
+const CARD = { W: 3.5, H: 5, btnY: .45, btnR: .314 };
+defProduct('bottonCartao', {
+  name: 'Botton com cartão', desc: 'Cartela de apresentação',
+  colors: [{ key: 'body', label: 'Cor de fundo do botton', pal: PAL.geral, def: '#ffffff' }],
+  uploads: [{ key: 'cardArt', label: 'Arte do cartão (7 x 10 cm)', hint: 'Deixe um espaço no centro para o botton — o círculo tracejado mostra onde ele fica.' }],
+  build() {
+    const { W, H, btnY, btnR } = CARD;
+    const T = makeTex(2048, 2048), C = makeTex(1024, Math.round(1024 * H / W));
+    const face = glossy({ map: T.tex, roughness: .12, clearcoatRoughness: .03, side: THREE.DoubleSide });
+    const paper = new THREE.MeshPhysicalMaterial({ map: C.tex, roughness: .55, clearcoat: .25, clearcoatRoughness: .4 });
+    const edge = std({ color: 0xf3f3f1, roughness: .8 });
+    const card = slab(roundedRect(W, H, .16), .03, .006, paper, edge);
+    const g = new THREE.Group(), stand = new THREE.Group();
+    stand.add(card);
+    // botton preso no cartão
+    const prof = [[.9, -.06], [.95, -.056], [.983, -.042], [.998, -.018], [.998, .008], [.988, .028], [.965, .043], [.92, .054], [.75, .066], [.45, .074], [0, .077]].map(([a, b]) => new THREE.Vector2(a, b));
+    const geo = new THREE.LatheGeometry(prof, 180); geo.rotateX(Math.PI / 2);
+    const pp = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < pp.count; i++) uv.setXY(i, pp.getX(i) / 2 + .5, pp.getY(i) / 2 + .5);
+    const btn = new THREE.Mesh(geo, face), R = btnR * W;
+    btn.scale.setScalar(R); btn.position.set(0, H / 2 - btnY * H, .04 + .06 * R);
+    stand.add(btn);
+    stand.rotation.x = -.1;                     // levemente inclinado, como apoiado
+    stand.position.y = H / 2 * Math.cos(.1);
+    g.add(stand); g.position.y = -H / 2;
+    let painted = '';
+    return { group: g, printable: btn, card, tex: T, area: { x: 124, y: 124, w: 1800, h: 1800 },
+      ground: -H / 2 - .02, cam: { theta: .35, phi: 1.42, dist: 14 },
+      apply() {
+        const t = cardTf(), key = [cardStamp, t.x, t.y, t.scale, t.rot].join('|');
+        if (painted === key) return;
+        const x = C.ctx, cw = C.canvas.width, ch = C.canvas.height;
+        x.fillStyle = '#ffffff'; x.fillRect(0, 0, cw, ch);
+        drawImg(x, cardImage(), { x: 0, y: 0, w: cw, h: ch }, t);
+        C.tex.needsUpdate = true; painted = key;
+      } };
   },
 });
 

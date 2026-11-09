@@ -227,6 +227,18 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
 .ae-head span{flex:1;text-align:right;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 #aeCanvas{display:block;width:100%;height:270px;touch-action:none;outline:none}
 .ae-foot{padding:8px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line);background:var(--soft);line-height:1.4}
+.client-only{display:none!important}
+body.client .client-only{display:inline-flex!important}
+body.client #share,body.client #sheet,body.client #back,body.client .crumb,body.client .prodhead .btn,body.client #resetAll,body.client #sceneOptsBtn,
+body.client #gearBtn,body.client .m3d,body.client #customBox,body.client [data-tab="cena"],body.client .logo small,body.client #video{display:none!important}
+.cbadge{align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;background:var(--brand-50);color:var(--brand-600);font-size:13px;font-weight:500}
+.warn{padding:12px 14px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;font-size:13px;line-height:1.45}
+.warn b{display:block;margin-bottom:4px}
+.steps2{margin:12px 0 4px;padding-left:20px;font-size:13px;line-height:1.7;color:var(--text)}
+.steps2 a{color:var(--brand);font-weight:600}
+.steps2 code,.warn code{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:12px}
+.linkrow{display:flex;gap:8px;margin:12px 0 8px}
+.linkrow input{flex:1;font-size:12px;color:var(--muted)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,10px);display:flex;align-items:center;gap:8px;background:var(--ink);color:var(--panel);padding:11px 16px;border-radius:10px;font-weight:500;opacity:0;transition:.2s;pointer-events:none;z-index:50;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
@@ -323,6 +335,8 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
   <div class="hstat cat-only"><span class="dot"></span>Funciona sem internet · 100% gratuito</div>
   <button class="btn ghost theme-btn" id="themeBtn" title="Tema claro / escuro" aria-label="Alternar tema claro/escuro"><svg class="i moon"><use href="#i-moon"/></svg><svg class="i sun"><use href="#i-sun"/></svg></button>
   <button class="btn ghost ed-only" id="back"><svg class="i"><use href="#i-back"/></svg><span class="lbl">Produtos</span></button>
+  <span class="client-only cbadge"><svg class="i"><use href="#i-cube"/></svg>Visualização 3D · <b id="clientName"></b></span>
+  <button class="btn ed-only" id="share"><svg class="i"><use href="#i-arrow"/></svg><span class="lbl">Compartilhar</span></button>
   <button class="btn ed-only" id="sheet"><svg class="i"><use href="#i-grid"/></svg><span class="lbl">Prancha</span></button>
   <button class="btn ed-only" id="video"><svg class="i"><use href="#i-film"/></svg><span class="lbl">Vídeo</span></button>
   <select class="fmt ed-only" id="format" title="Formato da imagem"><option value="1:1">1:1 Quadrado</option><option value="4:5">4:5 Feed</option><option value="9:16">9:16 Stories</option><option value="16:9">16:9 Paisagem</option></select>
@@ -397,6 +411,7 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
 
   <div class="panel" data-tab="pos">
     <h4><svg class="i"><use href="#i-sliders"/></svg>Posição da arte</h4>
+    <div class="segc hidden" id="layerSeg"><button data-l="btn">Ajustar: Botton</button><button data-l="card">Ajustar: Cartão</button></div>
     <label class="field"><span>Tamanho</span><input type="range" id="scale" min="5" max="300" value="100"><output></output></label>
     <label class="field"><span>Horizontal</span><input type="range" id="posX" min="-100" max="100" value="0"><output></output></label>
     <label class="field"><span>Vertical</span><input type="range" id="posY" min="-100" max="100" value="0"><output></output></label>
@@ -443,7 +458,7 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
     <header><svg class="i" style="color:var(--brand)"><use href="#i-sliders"/></svg><b>Opções de cena</b><button class="btn ghost sm" id="drawerClose" title="Fechar">✕</button></header>
     <div class="body" id="drawerBody"></div>
   </div>
-  <input type="file" id="bgImgFile" accept="image/*"><input type="file" id="env360File" accept="image/*"><input type="file" id="glbFile" accept=".glb,model/gltf-binary"><input type="file" id="tableImgFile" accept="image/*">
+  <input type="file" id="bgImgFile" accept="image/*"><input type="file" id="env360File" accept="image/*"><input type="file" id="extraFile" accept="image/*"><input type="file" id="glbFile" accept=".glb,model/gltf-binary"><input type="file" id="tableImgFile" accept="image/*">
   <div class="floatbar" id="bar">
     <span class="grp dock-only" id="tabs">
       <button class="btn ghost sm" data-tab="arte"><svg class="i"><use href="#i-image"/></svg>Arte</button>
@@ -480,6 +495,12 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
     </div>
   </div>
 </div>
+<div class="modal hidden" id="shareModal" style="align-items:center;padding-bottom:24px">
+  <div class="mbox" style="width:min(520px,100%)">
+    <div class="mhead"><svg class="i" style="color:var(--brand)"><use href="#i-arrow"/></svg><b>Compartilhar 3D com o cliente</b><button class="btn ghost sm" id="shClose" title="Fechar">✕</button></div>
+    <div class="mbody" id="shBody" style="padding-top:14px"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script src="vendor/three.min.js"></script>
@@ -491,6 +512,7 @@ body.dock aside .panel.tab-on:not(.hidden){display:block}
 <script src="vendor/DecalGeometry.js"></script>
 <script src="js/custom3d.js"></script>
 <script src="js/app.js"></script>
+<script src="js/share.js"></script>
 <script src="js/arteditor.js"></script>
 </body>
 </html>

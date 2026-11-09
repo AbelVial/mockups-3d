@@ -11,6 +11,7 @@
   // retângulo de trabalho (mesma matemática usada para pintar a arte no produto)
   function rect() {
     const id = state.product; if (!id) return null;
+    if (editKey() === CARD_KEY) { const A = cardArea(); return { AW: A.w, AH: A.h, bg: '#ffffff', label: 'Cartão 7 × 10 cm', img: cardImage(), surf: { x: 0, y: 0, w: A.w, h: A.h } }; }
     if (is3D(id)) {
       const m = model(id), c = colorsOf(id);
       if (m.custom) return { AW: m.area.w * 2, AH: m.area.h * 2, bg: c.body, wrap: false };
@@ -27,14 +28,14 @@
     const F = r.fitSurf ? r.surf : { x: 0, y: 0, w: r.AW, h: r.AH };
     const k = Math.min((cw - MARGIN * 2) / F.w, (ch - MARGIN * 2) / F.h);
     const ox = (cw - F.w * k) / 2 - F.x * k, oy = (ch - F.h * k) / 2 - F.y * k;
-    const t = tf(), [aw, ah] = artSize(), s = Math.min(r.AW / aw, r.AH / ah) * t.scale;
+    const t = tf(), [aw, ah] = artSize(r.img || currentArt()), s = Math.min(r.AW / aw, r.AH / ah) * t.scale;
     return { ...r, k, ox, oy, dpr, cw, ch, t,
       cx: ox + (r.AW / 2 + t.x * r.AW) * k, cy: oy + (r.AH / 2 + t.y * r.AH) * k,
       w: aw * s * k, h: ah * s * k, rot: t.rot * Math.PI / 180 };
   }
   function draw() {
     geo = layout(); if (!geo) return;
-    const g = geo, a = currentArt();
+    const g = geo, a = g.img || currentArt();
     ctx.setTransform(g.dpr, 0, 0, g.dpr, 0, 0);
     ctx.clearRect(0, 0, g.cw, g.ch);
     // fundo quadriculado suave
@@ -149,7 +150,7 @@
     requestAnimationFrame(watch);
     if (card.classList.contains('hidden') || !state.product || !document.body.classList.contains('editing')) return;
     const id = state.product, t = tf(id);
-    const key = [id, t.x, t.y, t.scale, t.rot, artStamp, state.art ? 1 : 0, is3D(id) ? colorsOf(id).body : '', cv.clientWidth, cv.clientHeight, !!(is3D(id) && model(id).custom)].join('|');
+    const key = [id, state.layer, cardStamp, t.x, t.y, t.scale, t.rot, artStamp, state.art ? 1 : 0, is3D(id) ? colorsOf(id).body : '', cv.clientWidth, cv.clientHeight, !!(is3D(id) && model(id).custom)].join('|');
     if (key !== lastKey && !drag) { lastKey = key; draw(); }
   })();
   window.aeRedraw = () => { if (!card.classList.contains("hidden")) draw(); };
