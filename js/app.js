@@ -74,7 +74,7 @@ function setup3D(id, aspect = viewAspect) {
 }
 function resize3D() {
   const st = $('#stage'); if (!st.clientWidth || !document.body.classList.contains('editing')) return;
-  const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+  const dpr = Math.min(LITE ? 1 : 1.5, window.devicePixelRatio || 1);
   renderer.setSize(Math.round(st.clientWidth * dpr), Math.round(st.clientHeight * dpr), false);
   viewAspect = st.clientWidth / st.clientHeight; needs3D = true; updateFrame();
 }
@@ -244,7 +244,7 @@ async function makeThumbs() {
 
 /* ================= navegação ================= */
 function route() {
-  if (location.hash.startsWith('#ver=')) { if (!state.client) setTimeout(() => openClientLink().then(ok => { if (!ok) { location.hash = ''; } })); return; }
+  if (location.hash.startsWith('#ver=') || location.hash.startsWith('#c=')) { if (!state.client) setTimeout(() => openClientLink().then(ok => { if (!ok) { location.hash = ''; } })); return; }
   if (state.client) return;
   const m = location.hash.match(/^#p=(.+)$/), id = m && decodeURIComponent(m[1]);
   if (id && (PRODUCTS[id] || getTpl(id))) {
@@ -533,15 +533,28 @@ $('#wm').oninput = e => { state.watermark = e.target.value; savePrefs(); syncWm(
 $('#guides').onchange = e => { state.guides = e.target.checked; draw(); };
 
 /* ---------- mouse no 3D ---------- */
-view3d.addEventListener('pointerdown', e => { view3d.setPointerCapture(e.pointerId); drag3d = { x: e.clientX, y: e.clientY }; });
+const touches = new Map(); let pinch0 = 0;
+const pinchDist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+view3d.addEventListener('pointerdown', e => {
+  try { view3d.setPointerCapture(e.pointerId); } catch (er) {}
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touches.size === 2) { drag3d = null; pinch0 = pinchDist(); } else drag3d = { x: e.clientX, y: e.clientY };
+});
+const endTouch = e => { touches.delete(e.pointerId); if (touches.size < 2) pinch0 = 0; };
+view3d.addEventListener('pointercancel', e => { endTouch(e); drag3d = null; });
 view3d.addEventListener('pointermove', e => {
+  if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touches.size === 2 && pinch0) {      // zoom com dois dedos
+    const d = pinchDist(), c = camOf(state.product);
+    c.dist = Math.max(2.5, Math.min(18, c.dist * pinch0 / d)); pinch0 = d; needs3D = true; return;
+  }
   if (!drag3d) return;
   const c = camOf(state.product);
   c.theta -= (e.clientX - drag3d.x) * .008;
   c.phi = Math.max(.25, Math.min(1.75, c.phi - (e.clientY - drag3d.y) * .006));
   drag3d = { x: e.clientX, y: e.clientY }; needs3D = true;
 });
-view3d.addEventListener('pointerup', () => drag3d = null);
+view3d.addEventListener('pointerup', e => { endTouch(e); drag3d = null; });
 view3d.addEventListener('wheel', e => {
   e.preventDefault();
   const c = camOf(state.product);

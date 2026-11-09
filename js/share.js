@@ -1,8 +1,8 @@
 /* =========================================================================
    Meu Mockup — compartilhar o 3D com o cliente
-   O link leva tudo no próprio endereço (#ver=...): produto, cores, cena,
-   posição e (opcional) a arte comprimida. Não precisa de servidor/banco.
-   O cliente abre em "modo cliente": gira, envia a própria arte e baixa.
+   Link curto (#c=<gist>): os dados ficam num Gist secreto do GitHub da loja.
+   Link longo (#ver=...): tudo dentro do endereço (sem configurar nada).
+   O cliente abre em "modo cliente": só visualiza e gira o produto.
    ========================================================================= */
 const b64u = {
   enc: str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
@@ -16,49 +16,97 @@ function compressImage(img, max) {
   if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/png');   // navegador sem WebP: PNG (mantém transparência)
   return url;
 }
-function shareLink(withArt) {
+function sharePayload(withArt, artMax = 640, cardMax = 560) {
   const id = state.product;
-  const data = { c: state.colors[id] || {}, g: state.toggles[id] || {}, t: tf(id), k: state.tf[CARD_KEY], v: state.cam[id], s: state.so, f: state.format, w: state.watermark };
-  let h = '#ver=' + encodeURIComponent(id) + '&d=' + b64u.enc(JSON.stringify(data));
-  if (withArt && state.art) h += '&a=' + encodeURIComponent(compressImage(state.art, 640));
-  if (withArt && id === 'bottonCartao' && state.cardArt) h += '&ca=' + encodeURIComponent(compressImage(state.cardArt, 560));
-  return location.href.split('#')[0] + h;
+  const d = { c: state.colors[id] || {}, g: state.toggles[id] || {}, t: tf(id), k: state.tf[CARD_KEY], v: state.cam[id], s: state.so, f: state.format, w: state.watermark };
+  const out = { ver: id, d: b64u.enc(JSON.stringify(d)) };
+  if (withArt && state.art) out.a = compressImage(state.art, artMax);
+  if (withArt && id === 'bottonCartao' && state.cardArt) out.ca = compressImage(state.cardArt, cardMax);
+  return out;
+}
+const baseUrl = () => location.href.split('#')[0];
+function shareLink(withArt) {
+  const p = sharePayload(withArt);
+  let h = '#ver=' + encodeURIComponent(p.ver) + '&d=' + p.d;
+  if (p.a) h += '&a=' + encodeURIComponent(p.a);
+  if (p.ca) h += '&ca=' + encodeURIComponent(p.ca);
+  return baseUrl() + h;
+}
+
+/* ---------- link curto: os dados ficam num Gist secreto na conta GitHub da loja ---------- */
+const TOKEN_KEY = 'meu-mockup-gist-token';
+const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+const shortCache = {};
+async function shortLink(withArt) {
+  const p = sharePayload(withArt, 1024, 900), body = JSON.stringify(p);
+  const key = withArt + '|' + body.length + '|' + body.slice(0, 200) + body.slice(-200);
+  if (shortCache[key]) return shortCache[key];
+  const r = await fetch('https://api.github.com/gists', {
+    method: 'POST', headers: { Authorization: 'token ' + getToken(), Accept: 'application/vnd.github+json' },
+    body: JSON.stringify({ public: false, description: 'Meu Mockup — ' + (PRODUCTS[p.ver]?.name || p.ver), files: { 'mockup.json': { content: body } } }),
+  });
+  if (r.status === 401) throw new Error('token');
+  if (!r.ok) throw new Error('http ' + r.status);
+  const g = await r.json();
+  return (shortCache[key] = baseUrl() + '#c=' + g.id);
+}
+async function fetchShared(id) {
+  const r = await fetch('https://api.github.com/gists/' + encodeURIComponent(id));
+  if (!r.ok) throw new Error('http ' + r.status);
+  const f = (await r.json()).files['mockup.json'];
+  const txt = f.truncated ? await (await fetch(f.raw_url)).text() : f.content;
+  const p = JSON.parse(txt);
+  return { get: k => p[k] ?? null };
 }
 const isOnline = () => /^https?:$/.test(location.protocol) && !/^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname);
 
 /* ---------- janela "Compartilhar" ---------- */
+let shareJob = 0;
 function renderShare() {
-  const box = $('#shBody'), withArt = $('#shArt') ? $('#shArt').checked : true;
+  const box = $('#shBody'), withArt = $('#shArt') ? $('#shArt').checked : true, job = ++shareJob;
   box.innerHTML = '';
   if (!isOnline()) {
-    box.innerHTML = `<div class="warn"><b>Antes, publique o app na internet (grátis, uma vez só).</b>
-      O app está abrindo direto do seu computador, então o cliente não consegue acessar esse endereço.</div>
-      <ol class="steps2">
-        <li>Acesse <a href="https://app.netlify.com/drop" target="_blank" rel="noopener">app.netlify.com/drop</a> e crie uma conta grátis.</li>
-        <li>Arraste a pasta <code>mockups</code> inteira para a página.</li>
-        <li>Abra o endereço que o Netlify gerar (ex.: <code>meumockup.netlify.app</code>) e use o app por ele.</li>
-        <li>Lá, este botão gera o link para o cliente.</li>
-      </ol>
-      <p class="hint"><svg class="i"><use href="#i-info"/></svg><span>Depois de publicado, nada sai do seu controle: o link leva a arte dentro dele, sem guardar em servidor.</span></p>`;
+    box.innerHTML = `<div class="warn"><b>Abra o app pelo endereço publicado para compartilhar.</b>
+      Agora ele está abrindo direto do seu computador, e o cliente não consegue acessar esse endereço.
+      Use <a href="https://abelvial.github.io/mockups-3d/" target="_blank" rel="noopener">abelvial.github.io/mockups-3d</a>.</div>`;
   }
-  const opt = ui('label', 'check', `<input type="checkbox" id="shArt" ${withArt ? 'checked' : ''}> Enviar junto a minha arte atual (o cliente vê exatamente o que você montou)`);
-  box.append(opt);
-  const link = shareLink(withArt), kb = Math.round(link.length / 1024);
-  const row = ui('div', 'linkrow', `<input type="text" readonly value="${link.replace(/"/g, '&quot;')}"><button class="btn pri sm" id="shCopy"><svg class="i"><use href="#i-check"/></svg>Copiar link</button>`);
-  box.append(row);
-  const btns = ui('div', 'seg', '');
-  btns.style.gridTemplateColumns = '1fr 1fr';
-  btns.innerHTML = `<a class="btn sm" id="shWa" target="_blank" rel="noopener"><svg class="i"><use href="#i-film"/></svg>Enviar no WhatsApp</a><a class="btn sm" id="shOpen" target="_blank" rel="noopener"><svg class="i"><use href="#i-arrow"/></svg>Testar como cliente</a>`;
-  box.append(btns);
-  $('#shOpen').href = link;
-  $('#shWa').href = 'https://wa.me/?text=' + encodeURIComponent('Veja seu produto em 3D e teste sua arte: ' + link);
-  box.append(ui('p', 'hint', `<svg class="i"><use href="#i-info"/></svg><span>Tamanho do link: ${kb} KB. ${kb > 60 ? '<b>Link grande</b> — se o WhatsApp cortar, desmarque “enviar minha arte” (o cliente envia a dele).' : 'Cabe tranquilo no WhatsApp.'}</span>`));
+  box.append(ui('label', 'check', `<input type="checkbox" id="shArt" ${withArt ? 'checked' : ''}> Enviar junto a minha arte atual`));
   $('#shArt').onchange = renderShare;
-  $('#shCopy').onclick = async () => {
-    const inp = row.querySelector('input');
-    try { await navigator.clipboard.writeText(link); } catch (e) { inp.select(); document.execCommand('copy'); }
-    toast('Link copiado!');
+  const row = ui('div', 'linkrow', `<input type="text" readonly value="Gerando link…"><button class="btn pri sm" id="shCopy" disabled><svg class="i"><use href="#i-check"/></svg>Copiar link</button>`);
+  const inp = row.querySelector('input'); box.append(row);
+  const btns = ui('div', 'seg', ''); btns.style.gridTemplateColumns = '1fr 1fr';
+  btns.innerHTML = `<a class="btn sm" id="shWa" target="_blank" rel="noopener"><svg class="i"><use href="#i-film"/></svg>Enviar no WhatsApp</a><a class="btn sm" id="shOpen" target="_blank" rel="noopener"><svg class="i"><use href="#i-arrow"/></svg>Ver como o cliente</a>`;
+  box.append(btns);
+  const info = ui('p', 'hint', ''); box.append(info);
+  const setup = ui('div', 'tokbox', ''); box.append(setup);
+  const show = (link, msg) => {
+    if (job !== shareJob) return;
+    inp.value = link; $('#shCopy').disabled = false; $('#shOpen').href = link;
+    const nome = PRODUCTS[state.product]?.name?.toLowerCase() || 'produto';
+    $('#shWa').href = 'https://wa.me/?text=' + encodeURIComponent(`Olá! Veja como vai ficar sua ${nome} em 3D — dá para girar e ver de todos os lados: ${link}`);
+    info.innerHTML = `<svg class="i"><use href="#i-info"/></svg><span>${msg}</span>`;
+    $('#shCopy').onclick = async () => { try { await navigator.clipboard.writeText(link); } catch (e) { inp.select(); document.execCommand('copy'); } toast('Link copiado!'); };
   };
+  const tokenForm = (err) => {
+    setup.innerHTML = `<b>Ativar links curtos (grátis, uma vez só)</b>
+      <ol class="steps2"><li>Abra <a href="https://github.com/settings/tokens/new?scopes=gist&description=Meu%20Mockup%20-%20links%20curtos" target="_blank" rel="noopener">esta página do GitHub</a> (já vem com a opção <code>gist</code> marcada).</li>
+      <li>Em <i>Expiration</i> escolha <b>No expiration</b> e clique em <b>Generate token</b>.</li>
+      <li>Copie o código (começa com <code>ghp_</code>) e cole aqui:</li></ol>
+      ${err ? `<div class="warn" style="margin-bottom:8px">${err}</div>` : ''}
+      <div class="linkrow" style="margin:0"><input type="text" id="tokIn" placeholder="ghp_..." autocomplete="off"><button class="btn sm" id="tokSave">Salvar</button></div>
+      <p class="hint"><svg class="i"><use href="#i-info"/></svg><span>O código fica guardado só neste navegador. Ele só consegue criar notas (gists) secretas — não acessa seus repositórios.</span></p>`;
+    $('#tokSave').onclick = () => { const v = $('#tokIn').value.trim(); if (!v) return; try { localStorage.setItem(TOKEN_KEY, v); } catch (e) {} renderShare(); };
+  };
+  const long = shareLink(withArt);
+  if (!getToken()) { show(long, `Link longo (${Math.round(long.length / 1024)} KB). Ative os links curtos abaixo para um link pequeno e bonito.`); tokenForm(); return; }
+  shortLink(withArt).then(link => {
+    show(link, 'Link curto pronto. O cliente só visualiza o produto em 3D — não consegue editar nada.');
+    setup.innerHTML = `<button class="btn ghost sm" id="tokOff">Desativar links curtos neste navegador</button>`;
+    $('#tokOff').onclick = () => { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} renderShare(); };
+  }).catch(e => {
+    show(long, `Não consegui gerar o link curto agora — usando o link longo (${Math.round(long.length / 1024)} KB).`);
+    if (e.message === 'token') { try { localStorage.removeItem(TOKEN_KEY); } catch (er) {} tokenForm('O código salvo não funcionou (expirou ou foi apagado). Gere outro.'); }
+  });
 }
 $('#share').onclick = () => { $('#shareModal').classList.remove('hidden'); renderShare(); };
 $('#shClose').onclick = () => $('#shareModal').classList.add('hidden');
@@ -67,7 +115,13 @@ $('#shareModal').addEventListener('pointerdown', e => { if (e.target.id === 'sha
 /* ---------- modo cliente ---------- */
 state.client = false;
 async function openClientLink() {
-  const p = new URLSearchParams(location.hash.slice(1)), id = p.get('ver');
+  let p = new URLSearchParams(location.hash.slice(1));
+  if (p.get('c')) {
+    $('#clientLoading').classList.remove('hidden');
+    try { p = await fetchShared(p.get('c')); }
+    catch (e) { $('#clientLoading').innerHTML = '<b>Não foi possível abrir este mockup.</b><span>O link pode ter sido removido. Peça um novo à loja.</span>'; return true; }
+  }
+  const id = p.get('ver');
   if (!id || !PRODUCTS[id]) return false;
   state.client = true; document.body.classList.add('client');
   // nada que o cliente faça altera as preferências salvas deste navegador
@@ -92,5 +146,6 @@ async function openClientLink() {
   $('#clientName').textContent = PRODUCTS[id].name;
   state.product = id; document.body.classList.add('editing');
   syncUI(); draw(); resize3D();
+  $('#clientLoading').classList.add('hidden');
   return true;
 }

@@ -124,7 +124,7 @@ function resetScene() { state.so = clone(SCENE_DEFAULT); saveScene(); markScene(
 /* ---------- objetos 3D ---------- */
 const flatCanvas = document.createElement('canvas'); flatCanvas.width = flatCanvas.height = 1024;
 let flatTex = null, envTex = null, tableTexObj = null;
-const envCanvas = document.createElement('canvas'); envCanvas.width = 4096; envCanvas.height = 2048;
+const envCanvas = document.createElement('canvas'); envCanvas.width = LITE ? 2048 : 4096; envCanvas.height = LITE ? 1024 : 2048;
 const studioEnvMap = scene.environment, pmremGen = new THREE.PMREMGenerator(renderer);
 let envLight = null;
 const tableCanvas = document.createElement('canvas'); tableCanvas.width = tableCanvas.height = 1024;
@@ -186,7 +186,7 @@ function paintFlat() {
   flatTex = new THREE.CanvasTexture(flatCanvas); flatTex.encoding = THREE.sRGBEncoding;
 }
 function paintEnv() {
-  const so = state.so, img = envImage(so.env), c = envCanvas.getContext('2d'), W = 4096, H = 2048;
+  const so = state.so, img = envImage(so.env), c = envCanvas.getContext('2d'), W = envCanvas.width, H = envCanvas.height;
   if (envTex) { envTex.dispose(); envTex = null; }
   if (envLight) { envLight.dispose(); envLight = null; }
   if (!img) return false;
