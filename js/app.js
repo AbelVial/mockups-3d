@@ -251,7 +251,7 @@ async function makeThumbs() {
 
 /* ================= navegação ================= */
 function route() {
-  if (location.hash.startsWith('#ver=') || location.hash.startsWith('#c=')) {
+  if (/^#(ver|c|s)=/.test(location.hash)) {
     if (state.client || state.clientStarting) return;
     state.clientStarting = true;
     // espera todos os scripts da página (share.js etc.) terminarem de carregar
